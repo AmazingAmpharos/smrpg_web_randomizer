@@ -343,8 +343,8 @@ def randomize_all(world):
                         chest.item = random.choice([i for i in eligible_items if i.hard_tier == 1])
                 finished_chests.append(chest);
                 eligible_rewards.remove(chest);
-                print(chest)
-                print(chest.item)
+                #print(chest)
+                #print(chest.item)
             
         if world.settings.is_flag_enabled(flags.ReplaceItems):
             
