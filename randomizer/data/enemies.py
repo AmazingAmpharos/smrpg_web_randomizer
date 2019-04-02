@@ -2172,6 +2172,7 @@ class Malakoopa(Enemy):
 class Pounder(Enemy):
     index = 67
     address = 0x390876
+    boss = True
     hp = 180
     speed = 25
     attack = 130
@@ -2207,6 +2208,7 @@ class Pounder(Enemy):
 class Poundette(Enemy):
     index = 68
     address = 0x390886
+    boss = True
     hp = 150
     speed = 30
     attack = 140
@@ -4242,7 +4244,7 @@ class MarioClone(Enemy):
     ratio_speed = 5.0
     ratio_evade = 0.0
     ratio_magic_evade = 0.0
-    
+
     def get_patch(self):
         """Extra patch data for this enemy.
 
@@ -4257,6 +4259,7 @@ class MarioClone(Enemy):
             patch.add_data(0x3944C3, bytes([0xFF]))
 
         return patch
+
 
 class PeachClone(Enemy):
     index = 154
@@ -4290,7 +4293,7 @@ class PeachClone(Enemy):
     ratio_speed = 5.0
     ratio_evade = 0.0
     ratio_magic_evade = 0.0
-    
+
     def get_patch(self):
         """Extra patch data for this enemy.
 
@@ -4305,6 +4308,7 @@ class PeachClone(Enemy):
             patch.add_data(0x39452F, bytes([0xFF]))
 
         return patch
+
 
 class BowserClone(Enemy):
     index = 155
@@ -4340,7 +4344,7 @@ class BowserClone(Enemy):
     ratio_speed = 3.0
     ratio_evade = 0.0
     ratio_magic_evade = 0.0
-    
+
     def get_patch(self):
         """Extra patch data for this enemy.
 
@@ -4355,6 +4359,7 @@ class BowserClone(Enemy):
             patch.add_data(0x39458D, bytes([0xFF]))
 
         return patch
+
 
 class GenoClone(Enemy):
     index = 156
@@ -4391,7 +4396,7 @@ class GenoClone(Enemy):
     ratio_speed = 7.5
     ratio_evade = 0.0
     ratio_magic_evade = 0.0
-    
+
     def get_patch(self):
         """Extra patch data for this enemy.
 
@@ -4442,7 +4447,7 @@ class MallowClone(Enemy):
     ratio_speed = 3.5
     ratio_evade = 0.0
     ratio_magic_evade = 0.0
-    
+
     def get_patch(self):
         """Extra patch data for this enemy.
 
@@ -4457,6 +4462,7 @@ class MallowClone(Enemy):
             patch.add_data(0x39465B, bytes([0xFF]))
 
         return patch
+
 
 class Shyster(Enemy):
     index = 158
@@ -5101,6 +5107,23 @@ class RightEye(Enemy):
     ratio_magic_defense = 0.5806
     ratio_speed = 0.2615
 
+    def get_patch(self):
+        """Update battle event triggers based on HP to use shuffled HP value instead.
+
+        Returns:
+            randomizer.logic.patch.Patch: Patch data
+
+        """
+        patch = super().get_patch()
+
+        # TODO: Get addresses for linear mode.
+        if self.world.open_mode:
+            # Vanilla game gives a 20% bonus when the eye comes back...h*ck it, let's keep it!
+            reset_hp = self.round_for_battle_script(self.hp * 1.2)
+            patch.add_data(0x35366e, utils.ByteField(reset_hp, num_bytes=2).as_bytes())
+
+        return patch
+
 
 class LeftEye(Enemy):
     index = 191
@@ -5134,6 +5157,21 @@ class LeftEye(Enemy):
     ratio_magic_attack = 0.8704
     ratio_magic_defense = 1.2903
     ratio_speed = 0.3231
+
+    def get_patch(self):
+        """Update battle event triggers based on HP to use shuffled HP value instead.
+
+        Returns:
+            randomizer.logic.patch.Patch: Patch data
+
+        """
+        patch = super().get_patch()
+
+        # TODO: Get addresses for linear mode.
+        if self.world.open_mode:
+            patch.add_data(0x35368e, utils.ByteField(self.hp, num_bytes=2).as_bytes())
+
+        return patch
 
 
 class KnifeGuy(Enemy):
