@@ -4,8 +4,7 @@ import enum
 import random
 import math
 
-from randomizer.logic import flags, utils
-from randomizer.logic import flags, utils
+from randomizer.logic import utils
 from randomizer.logic.patch import Patch
 from .characters import Mario, Mallow, Geno, Bowser, Peach
 
@@ -36,7 +35,6 @@ class Item:
 
     # Default per-item attributes.
     index = 0
-    name = 'DUMMY'
     description = ''
     tier = 999
     order = 0
@@ -66,8 +64,6 @@ class Item:
     arbitrary_value = 0
     vanilla_shop = False
     hard_tier = 0
-    magic_weapon = False
-    effect_type = "normal"
 
     # Flag to override whether we include the item stats in the patch data.  By default, we only include equipment but
     # a small handful of consumable items have their effects shuffled as well.
@@ -149,16 +145,10 @@ class Item:
 
         :rtype: list[str]
         """
-        if (self.is_weapon and not self.magic_weapon):
+        if self.is_weapon:
             return ["attack"]
-        elif self.magic_weapon:
-            return ["magic_attack"]
-        # Exclude Work Pants and Super Suit, include Rare Scarf
-        elif (self.is_armor and self.index not in [43, 69]) or self.index == 82:
+        elif self.is_armor:
             return ["defense", "magic_defense"]
-        # Speed items are the Zoom Shoes and Feather
-        elif self.index in [74, 91]:
-            return ["speed"]
         return self.EQUIP_STATS
 
     @property
@@ -325,18 +315,18 @@ class Item:
             # Only include initial item type and inflict/protect flags for equipment.
             if self.is_equipment:
                 # Item type and instant KO protection.
-                flags = self.item_type
+                val = self.item_type
                 if self.prevent_ko:
-                    flags |= 1 << 7
-                data += utils.ByteField(flags).as_bytes()
+                    val |= 1 << 7
+                data += utils.ByteField(val).as_bytes()
 
                 # Inflict/protect flags for status ailments/buffs.
-                flags = 0
+                val = 0
                 if self.status_immunities:
-                    flags += 1 << 0
+                    val += 1 << 0
                 if self.status_buffs:
-                    flags += 1 << 1
-                data += utils.ByteField(flags).as_bytes()
+                    val += 1 << 1
+                data += utils.ByteField(val).as_bytes()
 
                 # Which characters can equip
                 data += utils.BitMapSet(1, [c.index for c in self.equip_chars]).as_bytes()
@@ -444,7 +434,6 @@ class Item:
 
 class Hammer(Item):
     index = 5
-    name = 'Hammer'
     description = 'Pounds\x01enemies'
     tier = 5
     order = 53
@@ -457,7 +446,6 @@ class Hammer(Item):
 
 class FroggieStick(Item):
     index = 6
-    name = 'Froggie Stick'
     description = 'Frogfucius\x01made it'
     tier = 5
     order = 67
@@ -470,7 +458,6 @@ class FroggieStick(Item):
 
 class NokNokShell(Item):
     index = 7
-    name = 'NokNok Shell'
     description = 'Kick to attack'
     tier = 5
     order = 58
@@ -482,7 +469,6 @@ class NokNokShell(Item):
 
 class PunchGlove(Item):
     index = 8
-    name = 'Punch Glove'
     description = 'Knock out\x01power!'
     tier = 5
     order = 48
@@ -495,7 +481,6 @@ class PunchGlove(Item):
 
 class FingerShot(Item):
     index = 9
-    name = 'Finger Shot'
     description = 'Fingers shoot\x01bullets'
     tier = 5
     order = 70
@@ -508,7 +493,6 @@ class FingerShot(Item):
 
 class Cymbals(Item):
     index = 10
-    name = 'Cymbals'
     description = 'Scare enemies\x01with a clash'
     tier = 5
     order = 60
@@ -521,7 +505,6 @@ class Cymbals(Item):
 
 class Chomp(Item):
     index = 11
-    name = 'Chomp'
     description = 'Just spin me\x01at an enemy!'
     tier = 3
     order = 64
@@ -534,7 +517,6 @@ class Chomp(Item):
 
 class Masher(Item):
     index = 12
-    name = 'Masher'
     description = 'Makes monster\x01mash!'
     tier = 3
     order = 54
@@ -547,7 +529,6 @@ class Masher(Item):
 
 class ChompShell(Item):
     index = 13
-    name = 'Chomp Shell'
     description = 'It~s a\x01Kinklink shell'
     tier = 5
     order = 65
@@ -560,7 +541,6 @@ class ChompShell(Item):
 
 class SuperHammer(Item):
     index = 14
-    name = 'Super Hammer'
     description = 'The standard\x01for hammers!'
     tier = 5
     order = 55
@@ -573,7 +553,6 @@ class SuperHammer(Item):
 
 class HandGun(Item):
     index = 15
-    name = 'Hand Gun'
     description = 'It packs a kick'
     tier = 5
     order = 72
@@ -586,7 +565,6 @@ class HandGun(Item):
 
 class WhompGlove(Item):
     index = 16
-    name = 'Whomp Glove'
     description = 'The old double\x01whammie!'
     tier = 5
     order = 52
@@ -599,7 +577,6 @@ class WhompGlove(Item):
 
 class SlapGlove(Item):
     index = 17
-    name = 'Slap Glove'
     description = 'It slaps ~em\x01silly'
     tier = 5
     order = 49
@@ -611,7 +588,6 @@ class SlapGlove(Item):
 
 class TroopaShell(Item):
     index = 18
-    name = 'Troopa Shell'
     description = 'Kick with it!'
     tier = 5
     order = 59
@@ -624,7 +600,6 @@ class TroopaShell(Item):
 
 class Parasol(Item):
     index = 19
-    name = 'Parasol'
     description = 'Inflicts\x01serious pain!'
     tier = 5
     order = 68
@@ -637,7 +612,6 @@ class Parasol(Item):
 
 class HurlyGloves(Item):
     index = 20
-    name = 'Hurly Gloves'
     description = 'A classic\x01Mario}toss\x01attack'
     tier = 5
     order = 46
@@ -665,7 +639,6 @@ class HurlyGloves(Item):
 
 class DoublePunch(Item):
     index = 21
-    name = 'Double Punch'
     description = 'A handy double\x01rocket punch'
     tier = 5
     order = 44
@@ -678,7 +651,6 @@ class DoublePunch(Item):
 
 class RibbitStick(Item):
     index = 22
-    name = 'Ribbit Stick'
     description = 'It~ll come\x01in handy'
     tier = 5
     order = 69
@@ -691,7 +663,6 @@ class RibbitStick(Item):
 
 class SpikedLink(Item):
     index = 23
-    name = 'Spiked Link'
     description = 'A studded ball\x01and chain!'
     tier = 4
     order = 66
@@ -704,7 +675,6 @@ class SpikedLink(Item):
 
 class MegaGlove(Item):
     index = 24
-    name = 'Mega Glove'
     description = 'Packs a mega\x01wallop!'
     tier = 4
     order = 47
@@ -717,7 +687,6 @@ class MegaGlove(Item):
 
 class WarFan(Item):
     index = 25
-    name = 'War Fan'
     description = 'A mysterious\x01battle fan!'
     tier = 4
     order = 63
@@ -730,7 +699,6 @@ class WarFan(Item):
 
 class HandCannon(Item):
     index = 26
-    name = 'Hand Cannon'
     description = 'Shoots bullets\x01from elbow!'
     tier = 3
     order = 71
@@ -743,7 +711,6 @@ class HandCannon(Item):
 
 class StickyGlove(Item):
     index = 27
-    name = 'Sticky Glove'
     description = 'Launches a\x01punch attack.'
     tier = 4
     order = 50
@@ -756,7 +723,6 @@ class StickyGlove(Item):
 
 class UltraHammer(Item):
     index = 28
-    name = 'Ultra Hammer'
     description = 'The ultimate\x01hammer!'
     tier = 2
     order = 56
@@ -769,7 +735,6 @@ class UltraHammer(Item):
 
 class SuperSlap(Item):
     index = 29
-    name = 'Super Slap'
     description = 'The Princess~\x01mega}slap!'
     tier = 2
     order = 51
@@ -782,7 +747,6 @@ class SuperSlap(Item):
 
 class DrillClaw(Item):
     index = 30
-    name = 'Drill Claw'
     description = 'A drilling\x01claw!'
     tier = 2
     order = 45
@@ -795,7 +759,6 @@ class DrillClaw(Item):
 
 class StarGun(Item):
     index = 31
-    name = 'Star Gun'
     description = 'Try shooting\x01stars!'
     tier = 1
     order = 73
@@ -808,7 +771,6 @@ class StarGun(Item):
 
 class SonicCymbal(Item):
     index = 32
-    name = 'Sonic Cymbal'
     description = 'Puts noise to\x01work for you!'
     tier = 2
     order = 61
@@ -821,7 +783,6 @@ class SonicCymbal(Item):
 
 class LazyShellWeapon(Item):
     index = 33
-    name = 'Lazy Shell (Weapon)'
     description = 'Toss a shell\x01at an enemy!'
     tier = 1
     order = 57
@@ -834,7 +795,6 @@ class LazyShellWeapon(Item):
 
 class FryingPan(Item):
     index = 34
-    name = 'Frying Pan'
     description = 'Enough iron to\x01be dangerous!'
     tier = 1
     order = 62
@@ -847,7 +807,6 @@ class FryingPan(Item):
 
 class LuckyHammer(Item):
     index = 35
-    name = 'Hammer (Lucky)'
     description = 'A lucky hammer!'
     tier = 1
     order = 54
@@ -858,7 +817,6 @@ class LuckyHammer(Item):
 
 class Shirt(Item):
     index = 37
-    name = 'Shirt'
     description = 'It~s a\x01shirt!'
     tier = 5
     order = 102
@@ -872,7 +830,6 @@ class Shirt(Item):
 
 class Pants(Item):
     index = 38
-    name = 'Pants'
     description = 'It~s a pair\x01of pants!'
     tier = 5
     order = 95
@@ -886,7 +843,6 @@ class Pants(Item):
 
 class ThickShirt(Item):
     index = 39
-    name = 'Thick Shirt'
     description = 'A padded shirt'
     tier = 5
     order = 106
@@ -900,7 +856,6 @@ class ThickShirt(Item):
 
 class ThickPants(Item):
     index = 40
-    name = 'Thick Pants'
     description = 'Padded pants'
     tier = 5
     order = 105
@@ -914,7 +869,6 @@ class ThickPants(Item):
 
 class MegaShirt(Item):
     index = 41
-    name = 'Mega Shirt'
     description = 'Durable stay}\x01pressed shirt'
     tier = 5
     order = 93
@@ -928,7 +882,6 @@ class MegaShirt(Item):
 
 class MegaPants(Item):
     index = 42
-    name = 'Mega Pants'
     description = 'Durable work\x01pants'
     tier = 5
     order = 92
@@ -942,7 +895,6 @@ class MegaPants(Item):
 
 class WorkPants(Item):
     index = 43
-    name = 'Work Pants'
     description = 'Sweaty\x01work pants!'
     tier = 5
     order = 107
@@ -959,7 +911,6 @@ class WorkPants(Item):
 
 class MegaCape(Item):
     index = 44
-    name = 'Mega Cape'
     description = 'Durable\x01pressed cape'
     tier = 5
     order = 91
@@ -973,7 +924,6 @@ class MegaCape(Item):
 
 class HappyShirt(Item):
     index = 45
-    name = 'Happy Shirt'
     description = 'A lucky shirt'
     tier = 5
     order = 87
@@ -987,7 +937,6 @@ class HappyShirt(Item):
 
 class HappyPants(Item):
     index = 46
-    name = 'Happy Pants'
     description = 'A lucky\x01pair of pants'
     tier = 5
     order = 85
@@ -1001,7 +950,6 @@ class HappyPants(Item):
 
 class HappyCape(Item):
     index = 47
-    name = 'Happy Cape'
     description = 'A lucky cape'
     tier = 5
     order = 84
@@ -1015,7 +963,6 @@ class HappyCape(Item):
 
 class HappyShell(Item):
     index = 48
-    name = 'Happy Shell'
     description = 'A lucky shell'
     tier = 5
     order = 86
@@ -1029,7 +976,6 @@ class HappyShell(Item):
 
 class PolkaDress(Item):
     index = 49
-    name = 'Polka Dress'
     description = 'A flashy dress'
     tier = 5
     order = 96
@@ -1043,7 +989,6 @@ class PolkaDress(Item):
 
 class SailorShirt(Item):
     index = 50
-    name = 'Sailor Shirt'
     description = 'A sailor~s\x01suit'
     tier = 5
     order = 101
@@ -1057,7 +1002,6 @@ class SailorShirt(Item):
 
 class SailorPants(Item):
     index = 51
-    name = 'Sailor Pants'
     description = 'A sailor~s\x01pants'
     tier = 5
     order = 100
@@ -1071,7 +1015,6 @@ class SailorPants(Item):
 
 class SailorCape(Item):
     index = 52
-    name = 'Sailor Cape'
     description = 'A sailor~s\x01cape'
     tier = 5
     order = 99
@@ -1085,7 +1028,6 @@ class SailorCape(Item):
 
 class NauticaDress(Item):
     index = 53
-    name = 'Nautica Dress'
     description = 'A female\x01sailor~s dress'
     tier = 5
     order = 94
@@ -1099,7 +1041,6 @@ class NauticaDress(Item):
 
 class CourageShell(Item):
     index = 54
-    name = 'Courage Shell'
     description = 'A stout shell'
     tier = 4
     order = 74
@@ -1113,7 +1054,6 @@ class CourageShell(Item):
 
 class FuzzyShirt(Item):
     index = 55
-    name = 'Fuzzy Shirt'
     description = 'A fuzzy shirt'
     tier = 4
     order = 83
@@ -1127,7 +1067,6 @@ class FuzzyShirt(Item):
 
 class FuzzyPants(Item):
     index = 56
-    name = 'Fuzzy Pants'
     description = 'Fuzzy pants'
     tier = 4
     order = 82
@@ -1141,7 +1080,6 @@ class FuzzyPants(Item):
 
 class FuzzyCape(Item):
     index = 57
-    name = 'Fuzzy Cape'
     description = 'A fuzzy cape'
     tier = 4
     order = 80
@@ -1155,7 +1093,6 @@ class FuzzyCape(Item):
 
 class FuzzyDress(Item):
     index = 58
-    name = 'Fuzzy Dress'
     description = 'A fuzzy dress'
     tier = 4
     order = 81
@@ -1169,7 +1106,6 @@ class FuzzyDress(Item):
 
 class FireShirt(Item):
     index = 59
-    name = 'Fire Shirt'
     description = 'Determined\x01person~s shirt'
     tier = 4
     order = 79
@@ -1183,7 +1119,6 @@ class FireShirt(Item):
 
 class FirePants(Item):
     index = 60
-    name = 'Fire Pants'
     description = 'Determined\x01person~s pants'
     tier = 4
     order = 77
@@ -1197,7 +1132,6 @@ class FirePants(Item):
 
 class FireCape(Item):
     index = 61
-    name = 'Fire Cape'
     description = 'Determined\x01person~s cape'
     tier = 4
     order = 75
@@ -1211,7 +1145,6 @@ class FireCape(Item):
 
 class FireShell(Item):
     index = 62
-    name = 'Fire Shell'
     description = 'Determined\x01person~s shell'
     tier = 4
     order = 78
@@ -1225,7 +1158,6 @@ class FireShell(Item):
 
 class FireDress(Item):
     index = 63
-    name = 'Fire Dress'
     description = 'Determined\x01woman~s dress'
     tier = 4
     order = 76
@@ -1239,7 +1171,6 @@ class FireDress(Item):
 
 class HeroShirt(Item):
     index = 64
-    name = 'Hero Shirt'
     description = 'A legendary\x01shirt.'
     tier = 3
     order = 89
@@ -1253,7 +1184,6 @@ class HeroShirt(Item):
 
 class PrincePants(Item):
     index = 65
-    name = 'Prince Pants'
     description = 'Legendary\x01pants!'
     tier = 3
     order = 97
@@ -1267,7 +1197,6 @@ class PrincePants(Item):
 
 class StarCape(Item):
     index = 66
-    name = 'Star Cape'
     description = 'A legendary\x01cape.'
     tier = 3
     order = 103
@@ -1281,7 +1210,6 @@ class StarCape(Item):
 
 class HealShell(Item):
     index = 67
-    name = 'Heal Shell'
     description = 'A legendary\x01shell.'
     tier = 3
     order = 88
@@ -1295,7 +1223,6 @@ class HealShell(Item):
 
 class RoyalDress(Item):
     index = 68
-    name = 'Royal Dress'
     description = 'A legendary\x01dress!'
     tier = 3
     order = 98
@@ -1309,7 +1236,6 @@ class RoyalDress(Item):
 
 class SuperSuit(Item):
     index = 69
-    name = 'Super Suit'
     description = 'A truly fine\x01suit!'
     tier = 1
     order = 104
@@ -1324,12 +1250,10 @@ class SuperSuit(Item):
     status_immunities = [0, 1, 2, 3, 4, 5, 6]
     price = 700
     rare = True
-    effect_type = "elemental immunity"
 
 
 class LazyShellArmor(Item):
     index = 70
-    name = 'Lazy Shell (Armor)'
     description = 'A stout and\x01durable shell.'
     tier = 1
     order = 90
@@ -1344,12 +1268,10 @@ class LazyShellArmor(Item):
     status_immunities = [0, 1, 2, 3, 4, 5, 6]
     price = 222
     rare = True
-    effect_type = "elemental immunity"
 
 
 class ZoomShoes(Item):
     index = 74
-    name = 'Zoom Shoes'
     description = 'Speed up by 10!'
     tier = 4
     order = 128
@@ -1363,7 +1285,6 @@ class ZoomShoes(Item):
 
 class SafetyBadge(Item):
     index = 75
-    name = 'Safety Badge'
     description = 'Prevents Mute \x9c\x01Poison attacks'
     tier = 2
     order = 121
@@ -1374,14 +1295,12 @@ class SafetyBadge(Item):
     status_immunities = [0, 1, 2, 3, 4, 5, 6]
     price = 500
     rare = True
-    effect_type = "status protection"
 
 
 class JumpShoes(Item):
     index = 76
-    name = 'Jump Shoes'
     description = 'Use jump attacks\x01against any foe'
-    tier = 4
+    tier = 5
     order = 118
     item_type = 2
     equip_chars = [Mario]
@@ -1395,7 +1314,6 @@ class JumpShoes(Item):
 
 class SafetyRing(Item):
     index = 77
-    name = 'Safety Ring'
     description = 'Guards against\x01mortal blows.'
     tier = 1
     order = 122
@@ -1409,12 +1327,10 @@ class SafetyRing(Item):
     status_immunities = [0, 1, 2, 3, 4, 5, 6]
     price = 800
     rare = True
-    effect_type = "elemental immunity"
 
 
 class Amulet(Item):
     index = 78
-    name = 'Amulet'
     description = 'Great item,\x01bad smell!'
     tier = 2
     order = 108
@@ -1428,12 +1344,10 @@ class Amulet(Item):
     elemental_resistances = [4, 5, 6, 7]
     price = 200
     rare = True
-    effect_type = "elemental resistance"
 
 
 class ScroogeRing(Item):
     index = 79
-    name = 'Scrooge Ring'
     description = 'Cuts FP use\x01in half\x01during battle'
     tier = 4
     order = 123
@@ -1447,9 +1361,8 @@ class ScroogeRing(Item):
 
 class ExpBooster(Item):
     index = 80
-    name = 'EXP Booster'
     description = 'Doubles Exp.\x01when equipped'
-    tier = 5
+    tier = 4
     order = 113
     item_type = 2
     equip_chars = [Mario, Mallow, Geno, Bowser, Peach]
@@ -1457,14 +1370,12 @@ class ExpBooster(Item):
     frog_coin_item = True
     rare = True
     vanilla_shop = True
-    effect_type = "few effects"
 
 
 class AttackScarf(Item):
     index = 81
-    name = 'Attack Scarf'
     description = 'So comfy it~ll\x01make you jump!'
-    tier = 3
+    tier = 1
     order = 110
     item_type = 2
     equip_chars = [Mario]
@@ -1480,7 +1391,6 @@ class AttackScarf(Item):
 
 class RareScarf(Item):
     index = 82
-    name = 'Rare Scarf'
     description = 'Raises defense\x01power!'
     tier = 4
     order = 120
@@ -1494,7 +1404,6 @@ class RareScarf(Item):
 
 class BtubRing(Item):
     index = 83
-    name = 'B\'Tub Ring'
     description = 'You~ll win her\x01heart with this!'
     tier = 2
     order = 111
@@ -1507,7 +1416,6 @@ class BtubRing(Item):
 
 class AntidotePin(Item):
     index = 84
-    name = 'Antidote Pin'
     description = 'Prevents\x01poison damage'
     tier = 3
     order = 109
@@ -1518,12 +1426,10 @@ class AntidotePin(Item):
     status_immunities = [2]
     price = 28
     vanilla_shop = True
-    effect_type = "status protection"
 
 
 class WakeUpPin(Item):
     index = 85
-    name  = 'Wake Up Pin'
     description = 'Prevents Mute \x9c\x01Sleep attacks'
     tier = 3
     order = 127
@@ -1534,12 +1440,10 @@ class WakeUpPin(Item):
     status_immunities = [0, 1]
     price = 42
     vanilla_shop = True
-    effect_type = "status protection"
 
 
 class FearlessPin(Item):
     index = 86
-    name = 'Fearless Pin'
     description = 'Prevents Fear\x01attacks'
     tier = 3
     order = 114
@@ -1550,12 +1454,10 @@ class FearlessPin(Item):
     status_immunities = [3]
     price = 130
     vanilla_shop = True
-    effect_type = "status protection"
 
 
 class TrueformPin(Item):
     index = 87
-    name = 'Trueform Pin'
     description = 'You won~t be\x01turned into\x01Mushrooms or\x01Scarecrows!'
     tier = 3
     order = 126
@@ -1566,14 +1468,12 @@ class TrueformPin(Item):
     status_immunities = [5, 6]
     price = 60
     vanilla_shop = True
-    effect_type = "status protection"
 
 
 class CoinTrick(Item):
     index = 88
-    name = 'Coin Trick'
     description = 'Doubles the\x01coins you win\x01in battle'
-    tier = 5
+    tier = 4
     order = 112
     item_type = 2
     equip_chars = [Mario]
@@ -1581,12 +1481,10 @@ class CoinTrick(Item):
     frog_coin_item = True
     rare = True
     vanilla_shop = True
-    effect_type = "few effects"
 
 
 class GhostMedal(Item):
     index = 89
-    name = 'Ghost Medal'
     description = 'Raises defense\x01while attacking'
     tier = 2
     order = 116
@@ -1595,14 +1493,12 @@ class GhostMedal(Item):
     status_buffs = [5, 6]
     price = 1600
     rare = True
-    effect_type = "buffs"
 
 
 class JinxBelt(Item):
     index = 90
-    name = 'Jinx Belt'
     description = 'Jinx~s emblem\x01of power!'
-    tier = 3
+    tier = 1
     order = 117
     item_type = 2
     equip_chars = [Mario, Mallow, Geno, Bowser, Peach]
@@ -1616,9 +1512,8 @@ class JinxBelt(Item):
 
 class Feather(Item):
     index = 91
-    name = 'Feather'
     description = 'Speed up by 20'
-    tier = 3
+    tier = 2
     order = 115
     item_type = 2
     equip_chars = [Mario, Mallow, Geno, Bowser, Peach]
@@ -1631,7 +1526,6 @@ class Feather(Item):
 
 class TroopaPin(Item):
     index = 92
-    name = 'Troopa Pin'
     description = 'Grants "Troopa#\x01confidence!'
     tier = 2
     order = 125
@@ -1641,14 +1535,12 @@ class TroopaPin(Item):
     status_buffs = [3, 4]
     price = 1000
     rare = True
-    effect_type = "buffs"
 
 
 class SignalRing(Item):
     index = 93
-    name = 'Signal Ring'
     description = 'Noise indicates\x01a hidden chest.'
-    tier = 2
+    tier = 4
     order = 124
     item_type = 2
     equip_chars = [Mario, Mallow, Geno, Bowser, Peach]
@@ -1659,7 +1551,6 @@ class SignalRing(Item):
 
 class QuartzCharm(Item):
     index = 94
-    name = 'Quartz Charm'
     description = 'Shining source\x01of power!'
     tier = 1
     order = 119
@@ -1669,7 +1560,6 @@ class QuartzCharm(Item):
     status_buffs = [3, 4, 5, 6]
     price = 7
     rare = True
-    effect_type = "buffs"
 
 
 class Mushroom(Item):
@@ -2012,6 +1902,7 @@ class TempleKey(Item):
     order = 150
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class GoodieBag(Item):
@@ -2073,6 +1964,7 @@ class CricketPie(Item):
     order = 138
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class RockCandy(Item):
@@ -2118,7 +2010,7 @@ class SheepAttack(Item):
     reuseable = True
     price = 150
     rare = True
-    hard_tier = 4
+    hard_tier = 2
 
 
 class CarboCookie(Item):
@@ -2137,6 +2029,7 @@ class ShinyStone(Item):
     price = 4
     rare = True
     hard_tier = 2
+    shuffle_type = ItemShuffleType.Required
 
 
 class RoomKey(Item):
@@ -2144,6 +2037,7 @@ class RoomKey(Item):
     order = 145
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class ElderKey(Item):
@@ -2151,6 +2045,7 @@ class ElderKey(Item):
     order = 140
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class ShedKey(Item):
@@ -2158,6 +2053,7 @@ class ShedKey(Item):
     order = 147
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class LambsLure(Item):
@@ -2168,7 +2064,7 @@ class LambsLure(Item):
     reuseable = True
     price = 40
     rare = True
-    hard_tier = 3
+    hard_tier = 2
 
 
 class FrightBomb(Item):
@@ -2190,7 +2086,7 @@ class MysteryEgg(Item):
     reuseable = True
     price = 200
     rare = True
-    hard_tier = 2
+    hard_tier = 1
 
 
 class BeetleBox(Item):
@@ -2307,6 +2203,7 @@ class Seed(Item):
     item_type = 3
     rare = True
     hard_tier = 3
+    shuffle_type = ItemShuffleType.Required
 
 
 class Fertilizer(Item):
@@ -2315,6 +2212,7 @@ class Fertilizer(Item):
     item_type = 3
     rare = True
     hard_tier = 3
+    shuffle_type = ItemShuffleType.Required
 
 
 class BigBooFlag(Item):
@@ -2322,6 +2220,7 @@ class BigBooFlag(Item):
     order = 132
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class DryBonesFlag(Item):
@@ -2329,6 +2228,7 @@ class DryBonesFlag(Item):
     order = 139
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class GreaperFlag(Item):
@@ -2336,6 +2236,7 @@ class GreaperFlag(Item):
     order = 143
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class CricketJam(Item):
@@ -2343,6 +2244,7 @@ class CricketJam(Item):
     order = 137
     item_type = 3
     rare = True
+    shuffle_type = ItemShuffleType.Required
 
 
 class BrightCard(Item):
@@ -2392,7 +2294,6 @@ class ChestReward(Item):
 class Coins(ChestReward):
     """Base class for coins."""
     hard_tier = 0
-    pass
 
 
 class Coins5(Coins):
